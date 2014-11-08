@@ -2,88 +2,115 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace EngineEnhancement
 {
-    class ModuleRestrictedGimbal:ModuleGimbal
+    class ModuleMultiAxisGimbal:ModuleGimbal
     {
         [KSPField(isPersistant = false)]
-        public float pitchRange = 90.0f;
+        public float pitchRange = 0.0f;
+        [KSPField(isPersistant = false)]
+        public float yawRange = 0.0f;
 
         [KSPField(isPersistant = false)]
-        public float rollRange = 90.0f;
-
+        public string pitchTransformName = null;
         [KSPField(isPersistant = false)]
-        public float yawRange = 90.0f;
+        public string yawTransformName = null;
 
-        private bool showedError = false;
+        private Transform pitchTransform = null;
+        private Transform yawTransform = null;
 
-        // ModuleGimbal
-        //public float gimbalAnglePitch;
-        //public float gimbalAngleRoll;
-        //public float gimbalAngleYaw;
-        //[KSPField(isPersistant = true)]
-        //public bool gimbalLock;
-        //[KSPField(isPersistant = false)]
-        //public float gimbalRange;
-        //[KSPField(isPersistant = false)]
-        //public float gimbalResponseSpeed;
-        //[KSPField(isPersistant = false)]
-        //public string gimbalTransformName;
-        //public List<UnityEngine.Transform> gimbalTransforms;
-        //public List<UnityEngine.Quaternion> initRots;
-        //[KSPField(isPersistant = false)]
-        //public bool useGimbalResponseSpeed;
+        private Quaternion initPitch = Quaternion.identity;
+        private Quaternion initYaw = Quaternion.identity;
 
+        //--------------------------------------------------------------------
+        // GetInfo
+        // Tell the user how this gimbal is configured.
         public override string GetInfo()
         {
-            return string.Format("Maximum Pitch: {0}°\nMaximum Yaw: {1}°", pitchRange, yawRange);
+            return string.Format("Maximum Pitch: {0}°\nMaximum Yaw: {1}°\n", pitchRange, yawRange);
         }
 
+        //--------------------------------------------------------------------
+        // OnFixedUpdate
         public override void OnFixedUpdate()
         {
-            if (!HighLogic.LoadedSceneIsFlight || !vessel.isActiveVessel) return;
+            if (!HighLogic.LoadedSceneIsFlight) return;
 
-            if (gimbalTransforms.Count > initRots.Count && !showedError)
+            // Override stock behavior, so don't call base.OnFixedUpdate()
+            float toYaw;
+            float toPitch;
+            if(gimbalLock)
             {
-                Debug.LogError(this.name + " - too many gimbal transforms.  Disabling module.");
-                showedError = true;
-                return;
-            }
-
-            FlightCtrlState ctrl = vessel.ctrlState;
-
-            if (useGimbalResponseSpeed)
-            {
-                float toYaw = ctrl.yaw * yawRange;
-                float toPitch = ctrl.pitch * pitchRange;
-                float toRoll = ctrl.roll * rollRange;
-                gimbalAngleYaw = Mathf.Lerp(gimbalAngleYaw, toYaw, gimbalResponseSpeed * TimeWarp.deltaTime);
-                gimbalAnglePitch = Mathf.Lerp(gimbalAnglePitch, toPitch, gimbalResponseSpeed * TimeWarp.deltaTime);
-                gimbalAngleRoll = Mathf.Lerp(gimbalAngleRoll, toRoll, gimbalResponseSpeed * TimeWarp.deltaTime);
+                toYaw = 0.0f;
+                toPitch = 0.0f;
             }
             else
             {
-                gimbalAngleYaw = ctrl.yaw * yawRange;
-                gimbalAnglePitch = ctrl.pitch * pitchRange;
-                gimbalAngleRoll = ctrl.roll * rollRange;
+                FlightCtrlState ctrl = vessel.ctrlState;
+                // MOARdV TODO: decompose the desired inputs, and compare our thrust position relative to the center of mass.
+                // That way, we can provide roll authority if our thrust transform is off-axis.
+
+                toYaw = ctrl.yaw * yawRange;
+                toPitch = ctrl.pitch * pitchRange;
             }
 
-            for(int i=0; i<gimbalTransforms.Count; ++i)
+
+            if (gimbalAngleYaw != toYaw)
             {
-                gimbalTransforms[i].localRotation = initRots[i] * Quaternion.AngleAxis(this.gimbalAnglePitch, gimbalTransforms[i].InverseTransformDirection(vessel.ReferenceTransform.right)) * Quaternion.AngleAxis(gimbalAngleYaw, gimbalTransforms[i].InverseTransformDirection(vessel.ReferenceTransform.forward));
+                gimbalAngleYaw = Mathf.Lerp(gimbalAngleYaw, toYaw, Mathf.Min(1.0f, gimbalResponseSpeed * TimeWarp.deltaTime));
+            }
+            if (gimbalAnglePitch != toPitch)
+            {
+                gimbalAnglePitch = Mathf.Lerp(gimbalAnglePitch, toPitch, Mathf.Min(1.0f, gimbalResponseSpeed * TimeWarp.deltaTime));
+            }
+
+            if (pitchTransform != null)
+            {
+                pitchTransform.localRotation = initPitch * Quaternion.AngleAxis(gimbalAnglePitch, pitchTransform.InverseTransformDirection(vessel.ReferenceTransform.right));
+            }
+            if (yawTransform != null)
+            {
+                yawTransform.localRotation = initYaw * Quaternion.AngleAxis(gimbalAngleYaw, yawTransform.InverseTransformDirection(vessel.ReferenceTransform.forward));
             }
         }
 
-        public override void OnLoad(ConfigNode node)
+        //--------------------------------------------------------------------
+        // OnStart
+        public override void OnStart(PartModule.StartState state)
         {
-            base.OnLoad(node);
+            base.OnStart(state);
 
-            pitchRange = Math.Max(0.0f, Math.Min(pitchRange, gimbalRange));
-            rollRange = Math.Max(0.0f, Math.Min(rollRange, gimbalRange));
-            yawRange = Math.Max(0.0f, Math.Min(yawRange, gimbalRange));
+            if (state == StartState.None)
+            {
+                return; // early
+            }
+
+            if (pitchTransformName != null)
+            {
+                pitchTransform = part.FindModelTransform(pitchTransformName);
+                if (pitchTransform != null)
+                {
+                    initPitch = pitchTransform.localRotation;
+                }
+            }
+
+            if (yawTransformName != null)
+            {
+                yawTransform = part.FindModelTransform(yawTransformName);
+                if (yawTransform != null)
+                {
+                    initYaw = yawTransform.localRotation;
+                }
+            }
+        }
+
+        //--------------------------------------------------------------------
+        // OnUpdate
+        public override void OnUpdate()
+        {
+            // Override stock gimbal
         }
     }
 }
