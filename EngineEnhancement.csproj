@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="EngineAnimation.cs" />
     <Compile Include="ModuleRestrictedGimbal.cs" />
+    <Compile Include="ModuleVernierThruster.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
