@@ -129,7 +129,7 @@ namespace EngineEnhancement
 
                 foreach (ModuleEnginesFX engine in engineFxModules)
                 {
-                    if (engine.name == activeEngine && engine.EngineIgnited)
+                    if (engine.engineID == activeEngine && engine.EngineIgnited)
                     {
                         engineIgnited = true;
                     }
