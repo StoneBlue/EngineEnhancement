@@ -169,4 +169,71 @@ namespace EngineEnhancement
             HideMyMenu();
         }
     }
+
+    public class GimbalHider:PartModule
+    {
+        private bool gimbalsFound = false;
+        private List<ModuleGimbal> gimbals = new List<ModuleGimbal>();
+
+        //--------------------------------------------------------------------
+        // FindGimbals
+        private void FindGimbals()
+        {
+            if (!gimbalsFound && part != null)
+            {
+                foreach (PartModule thatModule in part.Modules)
+                {
+                    var gimbal = thatModule as ModuleGimbal;
+                    if (gimbal != null)
+                    {
+                        gimbals.Add(gimbal);
+                    }
+                }
+
+                gimbalsFound = true;
+            }
+        }
+
+        //--------------------------------------------------------------------
+        // HideMyMenu
+        private void HideMyMenu()
+        {
+            for(int i=1; i<gimbals.Count; ++i)
+            {
+                gimbals[i].gimbalLock = gimbals[0].gimbalLock;
+                gimbals[i].Events["FreeGimbal"].guiActive = false;
+                gimbals[i].Events["FreeGimbal"].guiActiveEditor = false;
+                gimbals[i].Events["LockGimbal"].guiActive = false;
+                gimbals[i].Events["LockGimbal"].guiActiveEditor = false;
+            }
+        }
+
+        //--------------------------------------------------------------------
+        // OnStart
+        public override void OnStart(PartModule.StartState state)
+        {
+            base.OnStart(state);
+            FindGimbals();
+        }
+
+        //--------------------------------------------------------------------
+        // OnFixedUpdate
+        public override void OnFixedUpdate()
+        {
+            base.OnFixedUpdate();
+            FindGimbals();
+
+            HideMyMenu();
+        }
+
+        //--------------------------------------------------------------------
+        // OnUpdate
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+            FindGimbals();
+
+            HideMyMenu();
+        }
+    }
 }
