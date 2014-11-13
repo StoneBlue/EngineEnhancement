@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="AxisRotationCopy.cs" />
     <Compile Include="EngineAnimation.cs" />
+    <Compile Include="EngineHider.cs" />
     <Compile Include="ModuleVernierThruster.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
