@@ -91,8 +91,8 @@ namespace EngineEnhancement
         // node in here.
         public ConfigNode myConfigNode;
 
-        // MOARdV TODO: different animation layers per animation?
-
+        //--------------------------------------------------------------------
+        // FindEngines
         private void FindEngines()
         {
             if (!enginesFound && part != null)
@@ -120,6 +120,8 @@ namespace EngineEnhancement
             }
         }
 
+        //--------------------------------------------------------------------
+        // NeedUpdateAnimation
         private bool NeedUpdateAnimation()
         {
             bool engineIgnited = false;
@@ -243,6 +245,8 @@ namespace EngineEnhancement
             }
         }
 
+        //--------------------------------------------------------------------
+        // OnUpdate
         public override void OnUpdate()
         {
             base.OnUpdate();
@@ -254,6 +258,8 @@ namespace EngineEnhancement
             UpdateAnimation();
         }
 
+        //--------------------------------------------------------------------
+        // UpdateAnimation
         private void UpdateAnimation()
         {
             if (engineActivationAnimation != null && NeedUpdateAnimation())
