@@ -48,7 +48,6 @@
     <Compile Include="AxisRotationCopy.cs" />
     <Compile Include="EngineAnimation.cs" />
     <Compile Include="EngineHider.cs" />
-    <Compile Include="ModuleVernierThruster.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
