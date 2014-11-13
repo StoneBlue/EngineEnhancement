@@ -45,8 +45,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AxisRotationCopy.cs" />
     <Compile Include="EngineAnimation.cs" />
-    <Compile Include="ModuleRestrictedGimbal.cs" />
     <Compile Include="ModuleVernierThruster.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -52,6 +52,21 @@ namespace EngineEnhancement
                 // MOARdV TODO: decompose the desired inputs, and compare our thrust position relative to the center of mass.
                 // That way, we can provide roll authority if our thrust transform is off-axis.
 
+                if(gimbalTransforms.Count != 1)
+                {
+                    Debug.Log("Unexpected gimbal count of " + gimbalTransforms.Count);
+                }
+                else
+                {
+                    Vector3 fwd = gimbalTransforms[0].TransformDirection(vessel.ReferenceTransform.forward);
+                    Vector3 CoM = gimbalTransforms[0].InverseTransformPoint(vessel.CoM);
+                    Vector3 center = gimbalTransforms[0].InverseTransformPoint(gimbalTransforms[0].position);
+                    float angle = Vector3.Angle(fwd, gimbalTransforms[0].forward);
+                    //Part.PartToVesselSpaceDir
+
+                    Debug.Log("CoM = " + CoM + ", fwd = " + fwd + ", center = " + center + ", angle = " + angle);
+                }
+
                 toYaw = ctrl.yaw * yawRange;
                 toPitch = ctrl.pitch * pitchRange;
             }
