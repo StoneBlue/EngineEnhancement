@@ -14,11 +14,15 @@ namespace EngineEnhancement
             public readonly Transform sourceTransform = null;
             public readonly Transform[] destinationTransform = null;
             public readonly Vector3 eulerAngles = Vector3.zero;
+            private Quaternion lastRotation = Quaternion.identity;
+            private float angleRate = 0.0f;
 
-            public TransformGroup(Part part, string source, string destination)
+            public TransformGroup(Part part, string source, string destination, float _angleRate)
             {
                 if(!(source == null || destination == null))
                 {
+                    angleRate = _angleRate;
+
                     string[] sources = source.Split('#');
                     if(sources.Length == 2)
                     {
@@ -46,6 +50,12 @@ namespace EngineEnhancement
                                 {
                                     sourceTransform = st;
                                     destinationTransform = dt;
+
+                                    Vector3 sourceAngles = sourceTransform.localEulerAngles;
+                                    Vector3 destAngles = new Vector3(sourceAngles.x * eulerAngles.x, sourceAngles.y * eulerAngles.y, sourceAngles.z * eulerAngles.z);
+                                    Quaternion destRot = Quaternion.Euler(destAngles);
+                                    lastRotation = destRot;
+                                    //Debug.Log("ARC - Init lastRotation = " + lastRotation);
                                 }
                             }
                         }
@@ -53,19 +63,43 @@ namespace EngineEnhancement
                 }
             }
 
-            public void FixedUpdate()
+            public void FixedUpdate(float dT)
             {
                 Vector3 sourceAngles = sourceTransform.localEulerAngles;
                 Vector3 destAngles = new Vector3(sourceAngles.x * eulerAngles.x, sourceAngles.y * eulerAngles.y, sourceAngles.z * eulerAngles.z);
+                Quaternion destRot = Quaternion.Euler(destAngles);
+                Quaternion resultQuat;
+                if (angleRate > 0.0f)
+                {
+                    float angle = Quaternion.Angle(lastRotation, destRot);
+                    if(Mathf.Abs(angle) > angleRate*dT)
+                    {
+                        float slerp = Mathf.Clamp01((dT * angleRate) / angle);
+                        resultQuat = Quaternion.Slerp(lastRotation, destRot, slerp);
+                    }
+                    else
+                    {
+                        resultQuat = destRot;
+                    }
+                }
+                else
+                {
+                    resultQuat = destRot;
+                }
+
+                lastRotation = resultQuat;
                 for (int i = 0; i < destinationTransform.Length; ++i)
                 {
-                    destinationTransform[i].localEulerAngles = destAngles;
+                    destinationTransform[i].localRotation = resultQuat;
                 }
             }
         }
 
         [KSPField]
         public string transformName = null;
+
+        [KSPField]
+        public float axisResponseRate = 1.0f;
 
         private List<TransformGroup> transforms = new List<TransformGroup>();
 
@@ -79,7 +113,7 @@ namespace EngineEnhancement
 
             foreach(var group in transforms)
             {
-                group.FixedUpdate();
+                group.FixedUpdate(TimeWarp.deltaTime);
             }
         }
 
@@ -96,7 +130,7 @@ namespace EngineEnhancement
             {
                 for(int i=0; i<inits.Length/2; ++i)
                 {
-                    TransformGroup tg = new TransformGroup(part, inits[i*2],inits[i*2+1]);
+                    TransformGroup tg = new TransformGroup(part, inits[i * 2], inits[i * 2 + 1], axisResponseRate);
                     if(tg.sourceTransform != null)
                     {
                         transforms.Add(tg);
