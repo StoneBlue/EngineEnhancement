@@ -45,6 +45,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="APAS69Fix.cs" />
     <Compile Include="AxisRotationCopy.cs" />
     <Compile Include="EngineAnimation.cs" />
     <Compile Include="EngineHider.cs" />
