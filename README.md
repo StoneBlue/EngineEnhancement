@@ -10,8 +10,8 @@ The EngineEnhancement plugin provides small PartModules that can be added to an 
 Allows animations to be played when an engine is activated or shut down, and when throttle settings change.  This can be used, for instance, to extend an exhaust nozzle on upper stage engines, spin pumps, and move other details on the engine.
 
 - `onActivateAnimation`: (Optional, string) The name of the animation to play.
-- `reverseAnimation`: (Optional, bool, default false) Should the animation be played in reverse?
-- `customAnimationSpeed`: (Optional, float, default 1.0) How quickly should the animation play?  1.0 is the default speed.
+- `reverseActivationAnimation`: (Optional, bool, default false) Should the animation be played in reverse?
+- `customActivationAnimationSpeed`: (Optional, float, default 1.0) How quickly should the animation play?  1.0 is the default speed.
 - `onThrottleAnimation`: (Optional, string) The name of an animation that changes based on throttle position.
 - `smoothThrottleAnimation`: (Optional, bool, default true) Whether the onThrottleAnimation should smoothly move between positions (when true), or snap to position (when false).
 - `throttleResponseSpeed`: (Optional, float, default 1.0) Controls how quickly the onThrottleAnimation moves to its new position.
@@ -42,6 +42,7 @@ An optional child node in EngineAnimation, a SpinnerTransformation rotates a tra
 The AxisRotationCopy module copies one of the local Euler angles of a transformation to another transform (or transforms).  This allows model components to be moved based on gimbal positions, for instance.  Multiple transforms can be listed, and all transforms with the destination transform's name in the model will be updated.  The axis from the source transform is identified by adding `#pitch`, `#yaw`, or `#roll` to the end of the transform's name (eg. `engine_gimbal#pitch`).
 
 -`transformName`: (Required, string) A comma-delimited list of (source transform, destination transform) pairs.
+-`axisResponseRate`: (Optional, float, default 1.0) Changes how quickly the axes respond to new locations.
 
 >     MODULE
 >     {
@@ -55,8 +56,6 @@ The EngineHider module hides a ModuleEngines or ModuleEnginesFX's tweakable menu
 
 - `hiddenEngine`: (Required, string) The `thrustVectorTransformName` of the engine to hide.
 
-###GimbalHider
-The GimbalHider module hides all ModuleGimbal instances in a part except for the first one.  All hidden gimbals are locked/freed when the visible gimbal is locked/freed.
 
 ##LICENSE:
 This work is licensed under a [Creative Commons Attribution-Share Alike 4.0 International License](http://creativecommons.org/licenses/by-sa/4.0/).
@@ -72,8 +71,8 @@ Pull requests welcome.
 
 ##CHANGES
 
-###(unreleased) - v0.3
+###3 December 2014 - v0.4
+* Initial public alpha release.
 
-###(unreleased) - v0.2
-
-###(unreleased) - v0.1
+###Older
+* Internal development versions
