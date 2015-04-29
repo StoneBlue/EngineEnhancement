@@ -201,10 +201,10 @@ namespace EngineEnhancement
             for(int i=1; i<gimbals.Count; ++i)
             {
                 gimbals[i].gimbalLock = gimbals[0].gimbalLock;
-                gimbals[i].Events["FreeGimbal"].guiActive = false;
-                gimbals[i].Events["FreeGimbal"].guiActiveEditor = false;
-                gimbals[i].Events["LockGimbal"].guiActive = false;
-                gimbals[i].Events["LockGimbal"].guiActiveEditor = false;
+                //gimbals[i].Events["FreeAction"].guiActive = false;
+                //gimbals[i].Events["FreeAction"].guiActiveEditor = false;
+                //gimbals[i].Events["LockAction"].guiActive = false;
+                //gimbals[i].Events["LockAction"].guiActiveEditor = false;
             }
         }
 

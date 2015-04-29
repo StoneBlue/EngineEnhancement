@@ -89,7 +89,7 @@ namespace EngineEnhancement
         //--- Hacktastic!  In order to keep the child ConfigNodes around so I
         // can use them when I need them, I have to stuff a copy of my config
         // node in here.
-        public ConfigNode myConfigNode;
+        private static Dictionary<string, ConfigNode> configNodes = new Dictionary<string, ConfigNode>();
 
         //--------------------------------------------------------------------
         // FindEngines
@@ -167,14 +167,14 @@ namespace EngineEnhancement
         {
             base.OnLoad(cfg);
 
-            if (myConfigNode == null)
+            if (!configNodes.ContainsKey(part.name))
             {
                 // MOARdV: Hacktastic!  This method is called once, and it
                 // does not seem to allow you to preserve variables you
                 // initialize here, so when it comes time to instantiate a part
                 // in the VAB, anything you set up here is lost.  But, you can
                 // preserve the ConfigNode for later.
-                myConfigNode = cfg;
+                configNodes.Add(part.name, cfg);
             }
         }
 
@@ -186,12 +186,19 @@ namespace EngineEnhancement
 
             Debug.Log("EE - OnStart");
 
+            if (!configNodes.ContainsKey(part.name))
+            {
+                Debug.LogError("EE - myConfigNode is unset");
+                return;
+            }
+            ConfigNode myConfigNode = configNodes[part.name];
+
             if (!initialized)
             {
                 FindEngines();
                 if (enginesFound)
                 {
-                    if (onActivateAnimation != null)
+                    if (!string.IsNullOrEmpty(onActivateAnimation))
                     {
                         engineActivationAnimation = part.FindModelAnimators(onActivateAnimation).FirstOrDefault();
                         if (engineActivationAnimation == null)
@@ -200,7 +207,7 @@ namespace EngineEnhancement
                         }
                     }
 
-                    if (onThrottleAnimation != null)
+                    if (!string.IsNullOrEmpty(onThrottleAnimation))
                     {
                         engineThrottleAnimation = part.FindModelAnimators(onThrottleAnimation).FirstOrDefault();
                         if (engineThrottleAnimation == null)
