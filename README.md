@@ -71,6 +71,9 @@ Pull requests welcome.
 
 ##CHANGES
 
+###29 April 2015 - v0.5
+* KSP 1.0 bandage release (GimbalHider feature is broken).
+
 ###3 December 2014 - v0.4
 * Initial public alpha release.
 
