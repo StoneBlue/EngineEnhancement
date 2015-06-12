@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EngineEnhancement
 {
-    class EngineHider:PartModule
+    //--- EngineHider: Hide multiple ModuleEngines on the same part ----------
+    class EngineHider : PartModule
     {
         [KSPField]
         public string hiddenEngine = "";
@@ -14,10 +12,8 @@ namespace EngineEnhancement
         private bool enginesFound = false;
         private MultiModeEngine mmeModule = null;
         private List<ModuleEngines> parentEngineModules = new List<ModuleEngines>();
-        private List<ModuleEnginesFX> parentEngineFxModules = new List<ModuleEnginesFX>();
 
         private ModuleEngines myEngine = null;
-        private ModuleEnginesFX myEngineFx = null;
 
         //--------------------------------------------------------------------
         // EngineIgnited
@@ -28,7 +24,7 @@ namespace EngineEnhancement
             {
                 string activeEngine = (mmeModule.runningPrimary) ? mmeModule.primaryEngineID : mmeModule.secondaryEngineID;
 
-                foreach (ModuleEnginesFX engine in parentEngineFxModules)
+                foreach (ModuleEngines engine in parentEngineModules)
                 {
                     if (engine.engineID == activeEngine && engine.EngineIgnited)
                     {
@@ -41,14 +37,6 @@ namespace EngineEnhancement
                 // What to do if there are multiple engine modules?  For now,
                 // treat it as "any engine that's on".
                 foreach (ModuleEngines engine in parentEngineModules)
-                {
-                    if (engine.EngineIgnited)
-                    {
-                        engineIgnited = true;
-                    }
-                }
-
-                foreach (ModuleEnginesFX engine in parentEngineFxModules)
                 {
                     if (engine.EngineIgnited)
                     {
@@ -68,14 +56,13 @@ namespace EngineEnhancement
             {
                 foreach (PartModule thatModule in part.Modules)
                 {
-                    var mme = thatModule as MultiModeEngine;
-                    if (mme != null)
+                    if (thatModule is MultiModeEngine)
                     {
-                        mmeModule = mme;
+                        mmeModule = thatModule as MultiModeEngine;
                     }
-                    var em = thatModule as ModuleEngines;
-                    if (em != null)
+                    else if (thatModule is ModuleEngines)
                     {
+                        var em = thatModule as ModuleEngines;
                         if (em.thrustVectorTransformName == hiddenEngine)
                         {
                             myEngine = em;
@@ -83,18 +70,6 @@ namespace EngineEnhancement
                         else
                         {
                             parentEngineModules.Add(em);
-                        }
-                    }
-                    var efm = thatModule as ModuleEnginesFX;
-                    if (efm != null)
-                    {
-                        if (efm.thrustVectorTransformName == hiddenEngine)
-                        {
-                            myEngineFx = efm;
-                        }
-                        else
-                        {
-                            parentEngineFxModules.Add(efm);
                         }
                     }
                 }
@@ -107,37 +82,30 @@ namespace EngineEnhancement
         // HideMyMenu
         private void HideMyMenu()
         {
-            if(myEngine != null)
+            try
             {
-                if (HighLogic.LoadedSceneIsFlight)
+                if (myEngine != null)
                 {
-                    myEngine.EngineIgnited = EngineIgnited();
-                    myEngine.Events["Activate"].guiActive = false;
-                    myEngine.Events["Shutdown"].guiActive = false;
-                    myEngine.Fields["status"].guiActive = false;
-                    myEngine.Fields["statusL2"].guiActive = false;
-                    myEngine.Fields["realIsp"].guiActive = false;
-                    myEngine.Fields["finalThrust"].guiActive = false;
-                    myEngine.Fields["fuelFlowGui"].guiActive = false;
+                    if (HighLogic.LoadedSceneIsFlight)
+                    {
+                        myEngine.EngineIgnited = EngineIgnited();
+                        myEngine.Events["Activate"].guiActive = false;
+                        myEngine.Events["Shutdown"].guiActive = false;
+                        myEngine.Fields["status"].guiActive = false;
+                        myEngine.Fields["statusL2"].guiActive = false;
+                        myEngine.Fields["realIsp"].guiActive = false;
+                        myEngine.Fields["finalThrust"].guiActive = false;
+                        myEngine.Fields["fuelFlowGui"].guiActive = false;
+                    }
+                    myEngine.Fields["thrustPercentage"].guiActive = false;
+                    myEngine.Fields["thrustPercentage"].guiActiveEditor = false;
                 }
-                myEngine.Fields["thrustPercentage"].guiActive = false;
-                myEngine.Fields["thrustPercentage"].guiActiveEditor = false;
             }
-            else if(myEngineFx != null)
+            catch (Exception e)
             {
-                if (HighLogic.LoadedSceneIsFlight)
-                {
-                    myEngineFx.EngineIgnited = EngineIgnited();
-                    myEngineFx.Events["Activate"].guiActive = false;
-                    myEngineFx.Events["Shutdown"].guiActive = false;
-                    myEngineFx.Fields["status"].guiActive = false;
-                    myEngineFx.Fields["statusL2"].guiActive = false;
-                    myEngineFx.Fields["realIsp"].guiActive = false;
-                    myEngineFx.Fields["finalThrust"].guiActive = false;
-                    myEngineFx.Fields["fuelFlowGui"].guiActive = false;
-                }
-                myEngineFx.Fields["thrustPercentage"].guiActive = false;
-                myEngineFx.Fields["thrustPercentage"].guiActiveEditor = false;
+                UnityEngine.Debug.LogError("EngineEnhancement.EngineHider.HideMyMenu triggered an exception: " + e);
+                // self-destruct so we don't spam
+                Destroy(this);
             }
         }
 
@@ -170,7 +138,8 @@ namespace EngineEnhancement
         }
     }
 
-    public class GimbalHider:PartModule
+    //--- GimbalHider: hide multiple gimbals on the same part ----------------
+    public class GimbalHider : PartModule
     {
         private bool gimbalsFound = false;
         private List<ModuleGimbal> gimbals = new List<ModuleGimbal>();
@@ -183,10 +152,9 @@ namespace EngineEnhancement
             {
                 foreach (PartModule thatModule in part.Modules)
                 {
-                    var gimbal = thatModule as ModuleGimbal;
-                    if (gimbal != null)
+                    if (thatModule is ModuleGimbal)
                     {
-                        gimbals.Add(gimbal);
+                        gimbals.Add(thatModule as ModuleGimbal);
                     }
                 }
 
@@ -198,13 +166,25 @@ namespace EngineEnhancement
         // HideMyMenu
         private void HideMyMenu()
         {
-            for(int i=1; i<gimbals.Count; ++i)
+            try
             {
-                gimbals[i].gimbalLock = gimbals[0].gimbalLock;
-                //gimbals[i].Events["FreeAction"].guiActive = false;
-                //gimbals[i].Events["FreeAction"].guiActiveEditor = false;
-                //gimbals[i].Events["LockAction"].guiActive = false;
-                //gimbals[i].Events["LockAction"].guiActiveEditor = false;
+                for (int i = 1; i < gimbals.Count; ++i)
+                {
+                    gimbals[i].gimbalLock = gimbals[0].gimbalLock;
+                    gimbals[i].Actions["FreeAction"].active = false;
+                    gimbals[i].Actions["LockAction"].active = false;
+                    gimbals[i].Actions["ToggleAction"].active = false;
+                    gimbals[i].Fields["gimbalLimiter"].guiActive = false;
+                    gimbals[i].Fields["gimbalLimiter"].guiActiveEditor = false;
+                    gimbals[i].Fields["gimbalLock"].guiActive = false;
+                    gimbals[i].Fields["gimbalLock"].guiActiveEditor = false;
+                }
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogError("EngineEnhancement.GimbalHider.HideMyMenu triggered an exception: " + e);
+                // self-destruct so we don't spam
+                Destroy(this);
             }
         }
 

@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace EngineEnhancement
 {
-    class AxisRotationCopy:PartModule
+    class AxisRotationCopy : PartModule
     {
         private class TransformGroup
         {
@@ -19,26 +16,26 @@ namespace EngineEnhancement
 
             public TransformGroup(Part part, string source, string destination, float _angleRate)
             {
-                if(!(source == null || destination == null))
+                if (!(source == null || destination == null))
                 {
                     angleRate = _angleRate;
 
                     string[] sources = source.Split('#');
-                    if(sources.Length == 2)
+                    if (sources.Length == 2)
                     {
                         Transform st = part.FindModelTransform(sources[0].Trim());
                         string axis = sources[1].Trim().ToLower();
                         if (st != null)
                         {
-                            if(axis == "pitch")
+                            if (axis == "pitch")
                             {
                                 eulerAngles.x = 1.0f;
                             }
-                            else if(axis == "yaw")
+                            else if (axis == "yaw")
                             {
                                 eulerAngles.y = 1.0f;
                             }
-                            else if(axis == "roll")
+                            else if (axis == "roll")
                             {
                                 eulerAngles.z = 1.0f;
                             }
@@ -72,7 +69,7 @@ namespace EngineEnhancement
                 if (angleRate > 0.0f)
                 {
                     float angle = Quaternion.Angle(lastRotation, destRot);
-                    if(Mathf.Abs(angle) > angleRate*dT)
+                    if (Mathf.Abs(angle) > angleRate * dT)
                     {
                         float slerp = Mathf.Clamp01((dT * angleRate) / angle);
                         resultQuat = Quaternion.Slerp(lastRotation, destRot, slerp);
@@ -111,7 +108,7 @@ namespace EngineEnhancement
                 return; // early
             }
 
-            foreach(var group in transforms)
+            foreach (var group in transforms)
             {
                 group.FixedUpdate(TimeWarp.deltaTime);
             }
@@ -126,12 +123,12 @@ namespace EngineEnhancement
             }
 
             string[] inits = transformName.Split(',');
-            if(inits != null)
+            if (inits != null)
             {
-                for(int i=0; i<inits.Length/2; ++i)
+                for (int i = 0; i < inits.Length / 2; ++i)
                 {
                     TransformGroup tg = new TransformGroup(part, inits[i * 2], inits[i * 2 + 1], axisResponseRate);
-                    if(tg.sourceTransform != null)
+                    if (tg.sourceTransform != null)
                     {
                         transforms.Add(tg);
                     }

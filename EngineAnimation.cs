@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace EngineEnhancement
@@ -36,7 +34,7 @@ namespace EngineEnhancement
                 if (transformName != null)
                 {
                     transform = part.FindModelTransform(transformName);
-                    if(transform == null)
+                    if (transform == null)
                     {
                         Debug.LogError("Did not find spinner transform " + transformName);
                     }
@@ -82,7 +80,6 @@ namespace EngineEnhancement
 
         private MultiModeEngine mmeModule = null;
         private List<ModuleEngines> engineModules = new List<ModuleEngines>();
-        private List<ModuleEnginesFX> engineFxModules = new List<ModuleEnginesFX>();
 
         private List<SpinnerTransformation> spinnerAnimations = new List<SpinnerTransformation>();
 
@@ -99,20 +96,13 @@ namespace EngineEnhancement
             {
                 foreach (PartModule thatModule in part.Modules)
                 {
-                    var mme = thatModule as MultiModeEngine;
-                    if (mme != null)
+                    if (thatModule is MultiModeEngine)
                     {
-                        mmeModule = mme;
+                        mmeModule = thatModule as MultiModeEngine;
                     }
-                    var em = thatModule as ModuleEngines;
-                    if(em != null)
+                    else if (thatModule is ModuleEngines)
                     {
-                        engineModules.Add(em);
-                    }
-                    var efm = thatModule as ModuleEnginesFX;
-                    if(efm != null)
-                    {
-                        engineFxModules.Add(efm);
+                        engineModules.Add(thatModule as ModuleEngines);
                     }
                 }
 
@@ -129,11 +119,12 @@ namespace EngineEnhancement
             {
                 string activeEngine = (mmeModule.runningPrimary) ? mmeModule.primaryEngineID : mmeModule.secondaryEngineID;
 
-                foreach (ModuleEnginesFX engine in engineFxModules)
+                for (int i = 0; i < engineModules.Count; ++i)
                 {
-                    if (engine.engineID == activeEngine && engine.EngineIgnited)
+                    if (engineModules[i].EngineIgnited)
                     {
                         engineIgnited = true;
+                        break;
                     }
                 }
             }
@@ -141,19 +132,12 @@ namespace EngineEnhancement
             {
                 // What to do if there are multiple engine modules?  For now,
                 // treat it as "any engine that's on".
-                foreach (ModuleEngines engine in engineModules)
+                for (int i = 0; i < engineModules.Count; ++i)
                 {
-                    if (engine.EngineIgnited)
+                    if (engineModules[i].EngineIgnited)
                     {
                         engineIgnited = true;
-                    }
-                }
-
-                foreach (ModuleEnginesFX engine in engineFxModules)
-                {
-                    if (engine.EngineIgnited)
-                    {
-                        engineIgnited = true;
+                        break;
                     }
                 }
             }
@@ -184,35 +168,43 @@ namespace EngineEnhancement
         {
             base.OnStart(state);
 
-            Debug.Log("EE - OnStart");
+            //Debug.Log("EngineAnimation - OnStart");
 
             if (!configNodes.ContainsKey(part.name))
             {
-                Debug.LogError("EE - myConfigNode is unset");
+                Debug.LogError("EngineAnimation - myConfigNode is unset");
                 return;
             }
             ConfigNode myConfigNode = configNodes[part.name];
 
-            if (!initialized)
+            if (!initialized && HighLogic.LoadedSceneIsFlight)
             {
                 FindEngines();
                 if (enginesFound)
                 {
                     if (!string.IsNullOrEmpty(onActivateAnimation))
                     {
-                        engineActivationAnimation = part.FindModelAnimators(onActivateAnimation).FirstOrDefault();
-                        if (engineActivationAnimation == null)
+                        Animation[] animation = part.FindModelAnimators(onActivateAnimation);
+                        if (animation.Length == 0)
                         {
-                            Debug.LogError("EE - did not find animation " + onActivateAnimation);
+                            Debug.LogError("EngineAnimation - did not find activation animation " + onActivateAnimation);
+                        }
+                        else
+                        {
+                            engineActivationAnimation = animation[0];
                         }
                     }
 
                     if (!string.IsNullOrEmpty(onThrottleAnimation))
                     {
-                        engineThrottleAnimation = part.FindModelAnimators(onThrottleAnimation).FirstOrDefault();
-                        if (engineThrottleAnimation == null)
+                        Animation[] animation = part.FindModelAnimators(onThrottleAnimation);
+                        if (animation.Length == 0)
                         {
-                            Debug.LogError("EE - did not find animation " + onThrottleAnimation);
+                            Debug.LogError("EngineAnimation - did not find throttle animation " + onThrottleAnimation);
+                        }
+                        else
+                        {
+                            engineThrottleAnimation = animation[0];
                         }
                     }
 
@@ -221,7 +213,7 @@ namespace EngineEnhancement
                     foreach (ConfigNode spinnerNode in spinnerNodes)
                     {
                         SpinnerTransformation spinner = new SpinnerTransformation(spinnerNode, part, layer);
-                        if(spinner.transform != null)
+                        if (spinner.transform != null)
                         {
                             ++layer;
                             spinnerAnimations.Add(spinner);
@@ -230,10 +222,7 @@ namespace EngineEnhancement
 
                     initialized = true;
                 }
-            }
 
-            if (HighLogic.LoadedSceneIsFlight)
-            {
                 if (engineActivationAnimation != null)
                 {
                     // Set the initial state of the animation
@@ -293,11 +282,11 @@ namespace EngineEnhancement
                 engineActivationAnimation.Play(onActivateAnimation);
             }
 
-            if(engineThrottleAnimation != null)
+            if (engineThrottleAnimation != null)
             {
                 float goalThrottleAnimation = vessel.ctrlState.mainThrottle;
                 float throttlePosition;
-                if(smoothThrottleAnimation && engineThrottleAnimation[onThrottleAnimation].normalizedTime != goalThrottleAnimation)
+                if (smoothThrottleAnimation && engineThrottleAnimation[onThrottleAnimation].normalizedTime != goalThrottleAnimation)
                 {
                     throttlePosition = Mathf.Lerp(engineThrottleAnimation[onThrottleAnimation].normalizedTime, goalThrottleAnimation, throttleResponseSpeed);
                 }
@@ -313,7 +302,7 @@ namespace EngineEnhancement
                 engineThrottleAnimation[onThrottleAnimation].normalizedTime = throttlePosition;
             }
 
-            foreach(var spinner in spinnerAnimations)
+            foreach (var spinner in spinnerAnimations)
             {
                 spinner.UpdateThrottle(vessel.ctrlState.mainThrottle);
             }
