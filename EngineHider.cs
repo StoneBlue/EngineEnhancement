@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+#if ALLTHIS
 
 namespace EngineEnhancement
 {
@@ -217,3 +218,4 @@ namespace EngineEnhancement
         }
     }
 }
+#endif

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-
+#if ALLTHIS
 namespace EngineEnhancement
 {
     class AxisRotationCopy : PartModule
@@ -137,3 +137,4 @@ namespace EngineEnhancement
         }
     }
 }
+#endif

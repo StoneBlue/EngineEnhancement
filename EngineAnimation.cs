@@ -6,6 +6,7 @@ namespace EngineEnhancement
 {
     public class EngineAnimation : PartModule
     {
+#if ALLTHIS
         private class SpinnerTransformation
         {
             public readonly Transform transform;
@@ -52,6 +53,7 @@ namespace EngineEnhancement
                 transform.Rotate(Vector3.forward * rotation);
             }
         }
+#endif
 
         // Are we going to play the animation in reverse?
         [KSPField]
@@ -62,7 +64,7 @@ namespace EngineEnhancement
 
         [KSPField]
         public float customActivationAnimationSpeed = 1.0f;
-
+#if ALLTHIS
         [KSPField]
         public string onThrottleAnimation = null;
 
@@ -71,22 +73,26 @@ namespace EngineEnhancement
 
         [KSPField]
         public float throttleResponseSpeed = 1.0f;
-
+#endif
         private bool playReverseActivationAnimation = false;
         private bool enginesFound = false;
         private bool initialized = false;
         private Animation engineActivationAnimation = null;
+#if ALLTHIS
         private Animation engineThrottleAnimation = null;
-
         private MultiModeEngine mmeModule = null;
+#endif
         private List<ModuleEngines> engineModules = new List<ModuleEngines>();
 
+#if ALLTHIS
         private List<SpinnerTransformation> spinnerAnimations = new List<SpinnerTransformation>();
-
+#endif
         //--- Hacktastic!  In order to keep the child ConfigNodes around so I
         // can use them when I need them, I have to stuff a copy of my config
         // node in here.
+#if ALLTHIS
         private static Dictionary<string, ConfigNode> configNodes = new Dictionary<string, ConfigNode>();
+#endif
 
         //--------------------------------------------------------------------
         // FindEngines
@@ -96,11 +102,14 @@ namespace EngineEnhancement
             {
                 foreach (PartModule thatModule in part.Modules)
                 {
+#if ALLTHIS
                     if (thatModule is MultiModeEngine)
                     {
                         mmeModule = thatModule as MultiModeEngine;
                     }
-                    else if (thatModule is ModuleEngines)
+                    else 
+#endif
+                    if (thatModule is ModuleEngines)
                     {
                         engineModules.Add(thatModule as ModuleEngines);
                     }
@@ -115,6 +124,7 @@ namespace EngineEnhancement
         private bool NeedUpdateAnimation()
         {
             bool engineIgnited = false;
+#if ALLTHIS
             if (mmeModule != null)
             {
                 string activeEngine = (mmeModule.runningPrimary) ? mmeModule.primaryEngineID : mmeModule.secondaryEngineID;
@@ -129,6 +139,7 @@ namespace EngineEnhancement
                 }
             }
             else
+#endif
             {
                 // What to do if there are multiple engine modules?  For now,
                 // treat it as "any engine that's on".
@@ -147,6 +158,7 @@ namespace EngineEnhancement
 
         //--------------------------------------------------------------------
         // OnLoad
+#if ALLTHIS
         public override void OnLoad(ConfigNode cfg)
         {
             base.OnLoad(cfg);
@@ -161,6 +173,7 @@ namespace EngineEnhancement
                 configNodes.Add(part.name, cfg);
             }
         }
+#endif
 
         //--------------------------------------------------------------------
         // OnStart
@@ -170,13 +183,15 @@ namespace EngineEnhancement
 
             //Debug.Log("EngineAnimation - OnStart");
 
+#if ALLTHIS
             if (!configNodes.ContainsKey(part.name))
             {
                 Debug.LogError("EngineAnimation - myConfigNode is unset");
                 return;
             }
-            ConfigNode myConfigNode = configNodes[part.name];
 
+            ConfigNode myConfigNode = configNodes[part.name];
+#endif
             if (!initialized && HighLogic.LoadedSceneIsFlight)
             {
                 FindEngines();
@@ -195,6 +210,7 @@ namespace EngineEnhancement
                         }
                     }
 
+#if ALLTHIS
                     if (!string.IsNullOrEmpty(onThrottleAnimation))
                     {
                         Animation[] animation = part.FindModelAnimators(onThrottleAnimation);
@@ -219,7 +235,7 @@ namespace EngineEnhancement
                             spinnerAnimations.Add(spinner);
                         }
                     }
-
+#endif
                     initialized = true;
                 }
 
@@ -231,6 +247,7 @@ namespace EngineEnhancement
                     engineActivationAnimation[onActivateAnimation].layer = 2;
                 }
 
+#if ALLTHIS
                 if (engineThrottleAnimation != null)
                 {
                     engineThrottleAnimation[onThrottleAnimation].normalizedTime = vessel.ctrlState.mainThrottle;
@@ -238,6 +255,7 @@ namespace EngineEnhancement
                     engineThrottleAnimation[onThrottleAnimation].wrapMode = WrapMode.ClampForever;
                     engineThrottleAnimation[onThrottleAnimation].layer = 3;
                 }
+#endif
             }
         }
 
@@ -282,6 +300,7 @@ namespace EngineEnhancement
                 engineActivationAnimation.Play(onActivateAnimation);
             }
 
+#if ALLTHIS
             if (engineThrottleAnimation != null)
             {
                 float goalThrottleAnimation = vessel.ctrlState.mainThrottle;
@@ -306,6 +325,7 @@ namespace EngineEnhancement
             {
                 spinner.UpdateThrottle(vessel.ctrlState.mainThrottle);
             }
+#endif
         }
     }
 }
